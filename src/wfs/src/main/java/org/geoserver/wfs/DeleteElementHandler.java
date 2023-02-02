@@ -46,10 +46,13 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
     /** logger */
     static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geoserver.wfs");
 
-    FilterFactory factory = CommonFactoryFinder.getFilterFactory(null);
+    FilterFactory filterFactory;
+    private final WFSTransactionExceptionFactory exceptionFactory;
 
     public DeleteElementHandler(GeoServer gs) {
         super(gs);
+        filterFactory = CommonFactoryFinder.getFilterFactory(null);
+        exceptionFactory = new WFSTransactionExceptionFactory(gs.getSettings());
     }
 
     @Override
@@ -166,8 +169,8 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
                     while (writer.hasNext()) {
                         String fid = writer.next().getID();
                         Set<FeatureId> featureIds = new HashSet<>();
-                        featureIds.add(factory.featureId(fid));
-                        locking.unLockFeatures(factory.id(featureIds));
+                        featureIds.add(filterFactory.featureId(fid));
+                        locking.unLockFeatures(filterFactory.id(featureIds));
                         writer.remove();
                         deleted++;
                     }
@@ -181,15 +184,9 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
                 store.removeFeatures(filter);
             }
         } catch (IOException e) {
-            // TODO: Centralize
             final StringBuilder msgBuilder = new StringBuilder();
             msgBuilder.append("Delete error: ");
             msgBuilder.append(e.getMessage());
-            if (e.getCause() != null) {
-                msgBuilder.append(" (");
-                msgBuilder.append(e.getCause().getMessage());
-                msgBuilder.append(")");
-            }
             final String exceptionMessage = msgBuilder.toString();
 
             String eHandle = delete.getHandle();
@@ -200,7 +197,8 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
             if (e instanceof FeatureLockException) {
                 code = "MissingParameterValue";
             }
-            throw new WFSTransactionException(exceptionMessage, e, code, eHandle, handle);
+            throw exceptionFactory.newWFSTransactionException(
+                    exceptionMessage, e, code, eHandle, handle);
         }
 
         // update deletion count

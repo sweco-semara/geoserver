@@ -53,10 +53,12 @@ public class InsertElementHandler extends AbstractTransactionElementHandler {
     static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geoserver.wfs");
 
     private FilterFactory filterFactory;
+    private final WFSTransactionExceptionFactory exceptionFactory;
 
     public InsertElementHandler(GeoServer gs, FilterFactory filterFactory) {
         super(gs);
         this.filterFactory = filterFactory;
+        exceptionFactory = new WFSTransactionExceptionFactory(gs.getSettings());
     }
 
     @Override
@@ -235,17 +237,12 @@ public class InsertElementHandler extends AbstractTransactionElementHandler {
             // update the insert counter
             inserted += featureList.size();
         } catch (Exception e) {
-            // TODO: Centralize
             final StringBuilder msgBuilder = new StringBuilder();
             msgBuilder.append("Insert error: ");
             msgBuilder.append(e.getMessage());
-            if (e.getCause() != null) {
-                msgBuilder.append(" (");
-                msgBuilder.append(e.getCause().getMessage());
-                msgBuilder.append(")");
-            }
             final String exceptionMessage = msgBuilder.toString();
-            throw new WFSTransactionException(exceptionMessage, e, insert.getHandle());
+            throw exceptionFactory.newWFSTransactionException(
+                    exceptionMessage, e, insert.getHandle());
         }
 
         // update transaction summary
