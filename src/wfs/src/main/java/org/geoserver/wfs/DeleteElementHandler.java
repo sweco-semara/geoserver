@@ -181,7 +181,17 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
                 store.removeFeatures(filter);
             }
         } catch (IOException e) {
-            String message = e.getMessage();
+            // TODO: Centralize
+            final StringBuilder msgBuilder = new StringBuilder();
+            msgBuilder.append("Delete error: ");
+            msgBuilder.append(e.getMessage());
+            if (e.getCause() != null) {
+                msgBuilder.append(" (");
+                msgBuilder.append(e.getCause().getMessage());
+                msgBuilder.append(")");
+            }
+            final String exceptionMessage = msgBuilder.toString();
+
             String eHandle = delete.getHandle();
             String code = null;
 
@@ -190,7 +200,7 @@ public class DeleteElementHandler extends AbstractTransactionElementHandler {
             if (e instanceof FeatureLockException) {
                 code = "MissingParameterValue";
             }
-            throw new WFSTransactionException(message, e, code, eHandle, handle);
+            throw new WFSTransactionException(exceptionMessage, e, code, eHandle, handle);
         }
 
         // update deletion count
