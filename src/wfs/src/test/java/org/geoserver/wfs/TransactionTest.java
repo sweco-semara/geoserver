@@ -1181,8 +1181,7 @@ public class TransactionTest extends WFSTestSupport {
         cat.add(ft);
 
         Connection conn =
-                ((JDBCDataStore) store)
-                        .getConnection(org.geotools.api.data.Transaction.AUTO_COMMIT);
+                ((JDBCDataStore) store).getConnection(org.geotools.data.Transaction.AUTO_COMMIT);
 
         // Create the trigger
         Statement stmt = conn.createStatement();
@@ -1232,8 +1231,7 @@ public class TransactionTest extends WFSTestSupport {
         cat.add(ft);
 
         Connection conn =
-                ((JDBCDataStore) store)
-                        .getConnection(org.geotools.api.data.Transaction.AUTO_COMMIT);
+                ((JDBCDataStore) store).getConnection(org.geotools.data.Transaction.AUTO_COMMIT);
 
         // Create the trigger
         Statement stmt = conn.createStatement();
